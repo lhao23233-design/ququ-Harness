@@ -1,0 +1,18 @@
+{
+  "github.copilot.chat.defaultModel": "gpt-4o",
+  "github.copilot.editor.defaultModel": "gpt-4o-mini",
+  "github.copilot.advanced.length": 4000,
+  "github.copilot.chat.indexing.enabled": false,
+  "github.copilot.chat.scopeSelection": true,
+  "github.copilot.chat.useProjectTemplates": false,
+  "github.copilot.chat.followUps": "never",
+  "github.copilot.renameSuggestions.triggerAutomatically": false,
+  "github.copilot.chat.reviewSelection.enabled": false,
+  "github.copilot.enable": {
+    "*": true,
+    "markdown": false,
+    "plaintext": false,
+    "yaml": false,
+    "json": false
+  }
+}

@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
-import { spawn, spawnSync } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { accessSync, constants } from "node:fs";
+import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
 const viteCli = fileURLToPath(new URL("../node_modules/vite/bin/vite.js", import.meta.url));
 const appUrl = "http://127.0.0.1:1420";
-const edgePath = findEdge();
+const execFileAsync = promisify(execFile);
 let server;
 let stopping = false;
 
@@ -16,13 +17,15 @@ if (process.platform !== "win32") {
   process.exit(1);
 }
 
-if (!edgePath) {
-  console.error("未找到 Microsoft Edge。请先安装 Edge 后再运行 ququ。");
-  process.exit(1);
-}
-
 try {
-  if (!(await isQuquRunning())) {
+  const [edgePath, serverRunning] = await Promise.all([
+    findEdge(),
+    isQuquRunning(),
+  ]);
+  if (!edgePath) {
+    throw new Error("未找到 Microsoft Edge。请先安装 Edge 后再运行 ququ。");
+  }
+  if (!serverRunning) {
     server = spawn(process.execPath, [viteCli, "--host", "127.0.0.1", "--port", "1420", "--strictPort"], {
       cwd: projectRoot,
       stdio: "inherit",
@@ -50,7 +53,7 @@ try {
 process.on("SIGINT", () => { void shutdown(0); });
 process.on("SIGTERM", () => { void shutdown(0); });
 
-function findEdge() {
+async function findEdge() {
   const candidates = [
     process.env["ProgramFiles(x86)"] && `${process.env["ProgramFiles(x86)"]}\\Microsoft\\Edge\\Application\\msedge.exe`,
     process.env.ProgramFiles && `${process.env.ProgramFiles}\\Microsoft\\Edge\\Application\\msedge.exe`,
@@ -66,13 +69,21 @@ function findEdge() {
     }
   }
 
-  const result = spawnSync("where.exe", ["msedge.exe"], { encoding: "utf8", windowsHide: true });
-  return result.status === 0 ? result.stdout.trim().split(/\r?\n/)[0] : undefined;
+  try {
+    const { stdout } = await execFileAsync("where.exe", ["msedge.exe"], {
+      encoding: "utf8",
+      windowsHide: true,
+      timeout: 1500,
+    });
+    return stdout.trim().split(/\r?\n/)[0] || undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 async function isQuquRunning() {
   try {
-    const response = await fetch(appUrl, { signal: AbortSignal.timeout(1200) });
+    const response = await fetch(appUrl, { signal: AbortSignal.timeout(750) });
     if (!response.ok) return false;
     return (await response.text()).includes("<title>Ququ Harness</title>");
   } catch {
@@ -99,7 +110,7 @@ function waitForServer(child) {
         return;
       }
 
-      setTimeout(check, 200);
+      setTimeout(check, 75);
     };
 
     child.once("error", (error) => {

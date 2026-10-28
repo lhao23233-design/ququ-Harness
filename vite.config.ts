@@ -1,8 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { deepSeekApiPlugin } from "./server/deepSeekApiPlugin";
+import { roguelikePlugin } from "./server/roguelikePlugin";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), deepSeekApiPlugin(), roguelikePlugin()],
   clearScreen: false,
   server: {
     host: "127.0.0.1",

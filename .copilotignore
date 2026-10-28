@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+.next/
+.venv/
+coverage/
+generated/
+storybook-static/
+*.min.js
+*.lock
+*.sql
+.env.local
+.git/
+.DS_Store
+Thumbs.db
